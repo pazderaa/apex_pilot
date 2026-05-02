@@ -1,128 +1,217 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import altair as alt
+from datetime import datetime, timedelta
 import time
 
-st.set_page_config(page_title="Apex AI | Váš virtuální CEO", page_icon="🦅", layout="wide")
+# --- POKROČILÁ KONFIGURACE ---
+st.set_page_config(
+    page_title="APEX AI | Enterprise Intelligence",
+    page_icon="💠",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
-hide_st_style = """
-            <style>
-            #MainMenu {visibility: hidden;}
-            footer {visibility: hidden;}
-            header {visibility: hidden;}
-            </style>
-            """
-st.markdown(hide_st_style, unsafe_allow_html=True)
+# --- CUSTOM CSS PRO ČISTÝ ENTERPRISE LIGHT THEME ---
+st.markdown("""
+    <style>
+    /* Hlavní pozadí - velmi jemná šedá pro kontrast s bílými kartami */
+    .stApp { background-color: #f8fafc; }
+    
+    /* Úprava metrik do podoby bílých karet s jemným stínem */
+    div[data-testid="metric-container"] {
+        background-color: #ffffff;
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+    
+    /* Vzhled postranního panelu */
+    div[data-testid="stSidebar"] {
+        background-color: #ffffff;
+        border-right: 1px solid #e2e8f0;
+    }
+    
+    /* Titulky a texty do profi tmavě modré/břidlicové */
+    h1, h2, h3, h4, h5, h6, p, span {
+        color: #0f172a;
+    }
+    
+    /* Expandery (Karty s detaily) */
+    div[data-testid="stExpander"] {
+        background-color: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    }
+    
+    /* Změna barvy primárních tlačítek na korporátní modrou */
+    .stButton>button[data-baseweb="button"] {
+        border-radius: 8px;
+        font-weight: 600;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
-if 'page' not in st.session_state:
-    st.session_state.page = 'landing'
+# --- LOGIKA A STAV ---
+if 'auth' not in st.session_state:
+    st.session_state.auth = False
 
-def go_to(page_name):
-    st.session_state.page = page_name
-
-def generate_mock_data():
-    dates = pd.date_range(end=pd.Timestamp.today(), periods=30)
+def simulate_finance_data():
+    dates = [datetime.now() - timedelta(days=x) for x in range(30)]
     data = pd.DataFrame({
-        'Datum': dates,
-        'Návštěvnost': np.random.randint(1000, 5000, size=30),
-        'Tržby (CZK)': np.random.randint(20000, 100000, size=30),
-        'Útrata Ads (CZK)': np.random.randint(5000, 25000, size=30)
+        'Day': dates,
+        'Revenue': np.random.normal(120000, 15000, 30).cumsum() + 500000,
+        'Expenses': np.random.normal(80000, 5000, 30).cumsum() + 300000,
     })
-    return data.set_index('Datum')
+    data['Profit'] = data['Revenue'] - data['Expenses']
+    return data
 
-def landing_page():
-    st.markdown("<h1 style='text-align: center; font-size: 4rem; color: #1E88E5;'>Apex Business Pilot AI 🦅</h1>", unsafe_allow_html=True)
-    st.markdown("<h3 style='text-align: center; color: gray;'>Nehádejte, proč váš byznys neroste. Nechte AI najít trhliny.</h3>", unsafe_allow_html=True)
-    
-    st.write("---")
-    
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.info("**Marketing & Ads**\n\nAI analyzuje ROAS, CTR a únavu kreativy. Řekne vám, kterou reklamu vypnout.")
-    with col2:
-        st.warning("**Web & UX**\n\nDetekce úzkých hrdel na webu. Zjistěte, proč lidé opouštějí košík na mobilu.")
-    with col3:
-        st.success("**CRM & Retence**\n\nAnalýza LTV zákazníků. Odhalíme, proč se klienti nevracejí a jak je reaktivovat.")
-    
-    st.write("")
-    st.write("")
-    col_btn1, col_btn2, col_btn3 = st.columns([1, 1, 1])
-    with col_btn2:
-        if st.button("Spustit aplikaci (Přihlášení)", use_container_width=True, type="primary"):
-            go_to('login')
-
-def login_page():
-    st.title("🔐 Přihlášení do klientské zóny")
-    
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        with st.form("login_form"):
-            st.text_input("Pracovní E-mail", value="reditel@mujeshop.cz")
-            st.text_input("Heslo", type="password", value="123456")
-            
-            st.write("*(Mockup: Data zdrojů (Meta Ads, GA4, Shoptet) jsou již fiktivně napojena)*")
-            
-            submitted = st.form_submit_button("Přihlásit a analyzovat data", type="primary", use_container_width=True)
-            if submitted:
-                with st.spinner("AI stahuje data z Meta Ads API, Google Analytics a CRM..."):
-                    time.sleep(2) # Simulace načítání
-                go_to('dashboard')
-
-def dashboard_page():
-    st.sidebar.title("🦅 Apex Pilot")
-    st.sidebar.write("Vítejte, **řediteli**.")
-    st.sidebar.write("---")
-    if st.sidebar.button("Log Out"):
-        go_to('landing')
-    
-    st.title("⚡ Holistický Audit Podniku (Říjen 2026)")
-    st.write("AI zanalyzovalo 125 430 datových bodů z vašich systémů. Zde je výsledek.")
-    
-    # Hlavní metriky
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Celkové Tržby (30 dní)", "1 450 000 Kč", "12 %")
-    col2.metric("Marketingový Spend", "320 000 Kč", "-5 % (Ušetřeno)")
-    col3.metric("Konverzní poměr", "1.8 %", "-0.4 %")
-    col4.metric("Prům. hodnota (AOV)", "1 850 Kč", "2 %")
-    
-    st.write("---")
-    
-    # Taby pro detailní analýzu
-    tab1, tab2, tab3, tab4 = st.tabs(["🔥 Ranní AI Svodka (Urgentní)", "📈 Marketing & Ads", "💻 Web & UX", "👥 CRM & Zákazníci"])
-    
-    with tab1:
-        st.subheader("CEO Svodka: Co musíte vyřešit DNES")
-        st.error("**Kritický problém: Mobilní checkout**\n\nVčera po updatu webu klesla konverze na iOS zařízeních o 40 %. Lidé nedokážou kliknout na tlačítko 'Zaplatit', protože ho překrývá banner s cookies. **Ušlý zisk za 24h: cca 18 500 Kč.**")
-        st.warning("**Varování: Reklamní kampaň 'Podzimní výprodej' krvácí**\n\nCena za proklik (CPC) u této kampaně na FB stoupla za 3 dny o 150 %. Kreativa je 'vyhořelá' (Frequency > 4.5). AI doporučuje kampaň okamžitě pozastavit.")
-        st.success("**Příležitost: Skrytý bestseller**\n\nProdukt 'Zimní bunda X' má organicky o 300 % více zobrazení, ale nemá žádnou reklamu. Alokujte sem 1000 Kč/den, předpokládané ROAS je 6.5.")
+# --- SIDEBAR NAVIGACE ---
+def render_sidebar():
+    with st.sidebar:
+        st.markdown("<h2 style='color: #2563eb; font-weight: 800; margin-bottom: 0;'>💠 APEX AI</h2>", unsafe_allow_html=True)
+        st.caption("Enterprise Operating System v3.0")
+        st.divider()
         
-        st.line_chart(generate_mock_data()[['Tržby (CZK)', 'Útrata Ads (CZK)']])
+        st.markdown("**Klientský profil:**")
+        st.markdown("<h4 style='margin-top:0;'>TechGear s.r.o.</h4>", unsafe_allow_html=True)
+        st.caption("Obrat: 120M CZK / Aktivní napojení: 8")
         
-    with tab2:
-        st.subheader("Analýza Marketingu (PNO & ROAS)")
-        st.write("Vaše reklamy generují návštěvnost, ale ne efektivní zisk.")
-        col_m1, col_m2 = st.columns(2)
-        with col_m1:
-            st.info("💡 **AI Insight: Špatné cílení na TikToku**\n\nTikTok ads vám přivádí uživatele ve věku 14-18 let. Váš průměrný produkt ale stojí 4000 Kč. Tito lidé tvoří 30 % trafficu, ale 0.1 % nákupů. Zrušte TikTok kampaň nebo tam nasaďte levnější produkty (tzv. tripwires).")
-        with col_m2:
-            st.bar_chart(pd.DataFrame({'ROAS (Návratnost)': [2.1, 4.5, 0.8, 5.2]}, index=['Facebook', 'Google Search', 'TikTok', 'E-mail']))
+        st.write("")
+        menu = st.radio("Řídící panely", [
+            "📊 Executive Dashboard", 
+            "🎯 Marketing & Akvizice", 
+            "⚙️ Operativa & Logistika", 
+            "💰 Cashflow & Finance"
+        ])
+        
+        st.spacer = st.container()
+        st.write("---")
+        if st.button("Odhlásit bezpečně"):
+            st.session_state.auth = False
+            st.rerun()
+        return menu
 
-    with tab3:
-        st.subheader("Web & UX: Proč uživatelé odcházejí?")
-        st.write("AI prošlo data z Google Analytics a Hotjaru.")
-        st.warning("📉 **Bounce Rate na produktové stránce 'Kategorie Y' je 78 %**")
-        st.write("👉 **AI Zjištění:** Stránka se na mobilním 4G připojení načítá 6.8 sekundy. Obrázky nejsou optimalizované (mají přes 4 MB).")
-        st.write("👉 **Akční krok pro vývojáře:** Zkonvertujte obrázky do formátu WebP a nasaďte lazy-loading. Očekávané zvýšení konverzí: + 0.5 %.")
+# --- PŘIHLAŠOVACÍ OBRAZOVKA (LOGIN) ---
+if not st.session_state.auth:
+    col1, col2, col3 = st.columns([1, 1.2, 1])
+    with col2:
+        st.write("")
+        st.write("")
+        st.write("")
+        st.markdown("<h1 style='text-align: center; color: #2563eb; font-size: 3rem;'>💠 APEX AI</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #64748b; margin-bottom: 2rem;'>Holistic Business Intelligence</p>", unsafe_allow_html=True)
+        
+        with st.container(border=True):
+            st.markdown("### Zabezpečený přístup")
+            st.text_input("Pracovní E-mail", value="ceo@techgear.cz")
+            st.text_input("Zabezpečovací klíč (API/Password)", type="password", value="**********")
+            
+            if st.button("Autentizovat a načíst data podniku", use_container_width=True, type="primary"):
+                with st.spinner("Navazuji šifrované spojení s ERP, CRM a reklamními systémy..."):
+                    time.sleep(1.5)
+                st.session_state.auth = True
+                st.rerun()
+else:
+    # --- HLAVNÍ APLIKACE (BĚŽÍCÍ PO PŘIHLÁŠENÍ) ---
+    menu = render_sidebar()
+    fin_df = simulate_finance_data()
 
-    with tab4:
-        st.subheader("CRM & Retence (LTV)")
-        st.write("Získat nového klienta vás stojí 850 Kč (CAC). Musíte si je udržet.")
-        st.success("🤝 **Retenční okno je otevřené**\n\nAI zjistilo vzorec: Lidé, kteří nakoupí 'Kávovar X', mají 60% šanci, že do 30 dnů koupí i filtry a zrnkovou kávu. **Ale vy jim žádný e-mail neposíláte!**")
-        st.write("👉 **Akční krok pro marketing:** Spusťte automatický e-mail přesně 21 dní po nákupu kávovaru se slevou 10 % na zrnkovou kávu. Potenciál dodatečných tržeb: 45 000 Kč měsíčně.")
+    if menu == "📊 Executive Dashboard":
+        st.title("Holistický přehled podniku")
+        st.markdown("Automatická syntéza dat z **Pohoda ERP**, **Shoptet**, **Meta Ads** a **Google Analytics 4**.")
+        
+        # TOP Metriky
+        col1, col2, col3, col4 = st.columns(4)
+        col1.metric("Měsíční obrat (MTD)", "8 450 000 CZK", "12.4 %")
+        col2.metric("Čistá marže (Net Margin)", "18.2 %", "-1.1 %", delta_color="inverse")
+        col3.metric("Customer Acquisition Cost", "640 CZK", "45 CZK")
+        col4.metric("AI Health Score", "88 / 100", "Stabilní")
+        
+        st.write("---")
+        
+        # AI Upozornění - Vypadá jako profesionální auditní zpráva
+        st.subheader("🚨 Kritická AI Zjištění (Posledních 24h)")
+        
+        with st.expander("📉 Ztráta marže vlivem logistiky (Priorita: VYSOKÁ)", expanded=True):
+            st.markdown("""
+            **Analýza:** Systém zaznamenal, že u 15 % objednávek v kategorii *Těžké váhy* dotujete dopravu. Průměrná cena dopravy u DPD stoupla, ale váš košík stále nabízí fixní sazbu 99 Kč. 
+            
+            **Dopad na zisk:** Ztrácíte přibližně **32 000 Kč týdně** na rozdílu mezi vybranou a zaplacenou dopravou.
+            
+            **Akční krok:** Navrhujeme automaticky upravit ceník dopravy v Shoptet API na základě váhy košíku.
+            """)
+            col_btn, _ = st.columns([1, 3])
+            with col_btn:
+                if st.button("Aplikovat dynamickou dopravu", type="primary"):
+                    st.success("API požadavek odeslán do Shoptetu. Změna se projeví do 5 minut.")
 
-if st.session_state.page == 'landing':
-    landing_page()
-elif st.session_state.page == 'login':
-    login_page()
-elif st.session_state.page == 'dashboard':
-    dashboard_page()
+        with st.expander("📈 Nevyužitý potenciál u B2B klientů (Priorita: STŘEDNÍ)"):
+            st.markdown("Identifikovali jsme 14 IČO zákazníků, kteří nakupují pravidelně každé úterý materiál za více než 10 000 Kč, ale nevyužívají váš věrnostní program. Odeslání automatického e-mailu s nabídkou VIP účtu může zvýšit jejich LTV o 30 %.")
+
+        # Zobrazení Grafu v bílém kontextu
+        st.write("")
+        st.subheader("Vývoj tržeb a nákladů (30 dní)")
+        chart_data = fin_df.melt('Day', value_vars=['Revenue', 'Expenses'], var_name='Typ', value_name='Hodnota')
+        chart = alt.Chart(chart_data).mark_area(opacity=0.4).encode(
+            x=alt.X('Day:T', title='Datum'),
+            y=alt.Y('Hodnota:Q', title='CZK'),
+            color=alt.Color('Typ:N', scale=alt.Scale(range=['#2563eb', '#ef4444'])), # Modrá pro Revenue, Červená pro výdaje
+            tooltip=['Day', 'Typ', 'Hodnota']
+        ).properties(height=350)
+        st.altair_chart(chart, use_container_width=True)
+
+    elif menu == "🎯 Marketing & Akvizice":
+        st.title("Výkonnost Marketingu")
+        st.markdown("Detailní rozpad návratnosti investic (ROAS) a akvizičních nákladů (CAC) přes všechny kanály.")
+        
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Celkový Spend (30 dní)", "450 000 CZK")
+        col2.metric("Průměrné PNO", "14.5 %", "-2.1 %", delta_color="inverse")
+        col3.metric("Návratnost zákazníka (LTV:CAC)", "4.2x", "Zdravé")
+
+        st.write("---")
+        st.subheader("Audit reklamních platforem")
+        
+        # Simulace tabulky
+        audit_data = pd.DataFrame({
+            "Kanál": ["Meta Ads (FB/IG)", "Google Search", "Google PMax", "TikTok", "E-mailing"],
+            "Spend (CZK)": [180000, 120000, 100000, 40000, 10000],
+            "CAC (CZK)": [750, 420, 510, 1200, 45],
+            "ROAS": [3.2, 5.8, 4.5, 1.1, 28.5],
+            "AI Status": ["Optimalizovat", "Škálovat", "Stabilní", "Kritické - Vypnout", "Škálovat"]
+        })
+        
+        # Stylování tabulky
+        st.dataframe(
+            audit_data.style.apply(lambda x: ['background: #fee2e2; color: #991b1b' if v == 'Kritické - Vypnout' 
+                                            else 'background: #dcfce7; color: #166534' if 'Škálovat' in str(v) 
+                                            else '' for v in x], axis=1),
+            use_container_width=True,
+            hide_index=True
+        )
+
+    elif menu == "💰 Cashflow & Finance":
+        st.title("Řízení Cashflow")
+        st.markdown("Předikce likvidity a analýza vázaného kapitálu na základě dat z účetnictví.")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            with st.container(border=True):
+                st.markdown("### Peněžní Runway")
+                st.markdown("<h2 style='color: #166534;'>14.5 měsíců</h2>", unsafe_allow_html=True)
+                st.write("Při současném Burn Rate (spalování hotovosti) máte zajištěný provoz na více než rok bez externího financování.")
+        
+        with col2:
+            with st.container(border=True):
+                st.markdown("### Vázaný kapitál ve skladu")
+                st.markdown("<h2 style='color: #991b1b;'>4 250 000 CZK</h2>", unsafe_allow_html=True)
+                st.write("30 % vašich skladových zásob se nepohnulo déle než 90 dní (tzv. Dead Stock). AI doporučuje okamžitý flash-sale k uvolnění hotovosti.")
+
+    elif menu == "⚙️ Operativa & Logistika":
+        st.title("Provozní efektivita")
+        st.write("Sledujte rychlost expedice a chybovost napříč vašimi sklady.")
+        st.info("Zde by byly hluboké statistiky z vašeho WMS (Warehouse Management System). Prozatím ve fázi připojování konektoru.")
